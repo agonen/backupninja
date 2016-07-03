@@ -2,8 +2,6 @@
 # vim: set filetype=sh sw=3 sts=3 expandtab autoindent:
 
 #
-# TODO: compression support
-# TODO: archive naming support
 # TODO: encryption support
 #
 
@@ -77,12 +75,13 @@ do_borg_dest() {
 
    set -o noglob
    REPLY=
-   while [ -z "$REPLY" -o -z "$borg_directory" -o -z "$borg_host" -o -z "$borg_user" -o -z "$borg_compression" ]
+   while [ -z "$REPLY" -o -z "$borg_directory" -o -z "$borg_host" -o -z "$borg_user" -o -z "$borg_archive" -o -z "$borg_compression" ]
    do
      formBegin "$borg_title - destination"
         formItem "directory" "$borg_directory"
         formItem "host" "$borg_host"
         formItem "user" "$borg_user"
+        formItem "archive_name" "$borg_archive"
         formItem "compression" "$borg_compression"
         formDisplay
      [ $? = 0 ] || return
@@ -90,7 +89,8 @@ do_borg_dest() {
      borg_directory=${tmp_array[0]}
      borg_host=${tmp_array[1]}
      borg_user=${tmp_array[2]}
-     borg_compression=${tmp_array[3]}
+     borg_archive=${tmp_array[3]}
+     borg_compression=${tmp_array[4]}
   done
   set +o noglob
 
@@ -293,11 +293,10 @@ directory = $borg_directory
 host = $borg_host
 user = $borg_user
 compression = $borg_compression
+archive = $borg_archive
 EOF
 
    chmod 600 $next_filename
-
-   msgBox "$borg_title" "More advanced options are available (archive naming, compression, etc), see example.borg."
 }
 
 borg_main_menu() {
@@ -344,6 +343,7 @@ borg_wizard() {
    borg_user=root
    borg_host=localhost
    borg_compression=lz4
+   borg_archive='{now:%Y-%m-%d}'
    borg_keepdaily=7
    borg_keepweekly=4
    borg_keepmonthly=-1
