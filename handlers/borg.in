@@ -34,7 +34,7 @@ getconf compression lz4
 
 # check the connection at the source and destination
 [ -n "$test" ] || test=0
-if [ "$host" != "localhost" ] && [ "$testconnect" = "yes" ] || [ "${test}" -eq 1 ]; then
+if [ "$host" != "localhost" ] && ([ "$testconnect" = "yes" ] || [ "${test}" -eq 1 ]); then
    debug "ssh -o PasswordAuthentication=no $host -l $user 'echo -n 1'"
    local ret=`ssh -o PasswordAuthentication=no $host -l $user 'echo -n host is alive'`
    if echo $ret | grep "host is alive"; then
