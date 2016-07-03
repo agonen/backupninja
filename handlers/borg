@@ -44,7 +44,11 @@ fi
 
 # destination specific checks
 [ "$directory" != "" ] || fatal "Destination directory not set"
-execstr_repository="$user@$host:$directory"
+if [ "$host" != "localhost" ]; then
+  execstr_repository="$user@$host:$directory"
+else
+  execstr_repository="$directory"
+fi
 execstr_archive="$archive"
 
 ### INIT IF NEEDED ###
