@@ -77,18 +77,20 @@ do_borg_dest() {
 
    set -o noglob
    REPLY=
-   while [ -z "$REPLY" -o -z "$borg_directory" -o -z "$borg_host" -o -z "$borg_user" ]
+   while [ -z "$REPLY" -o -z "$borg_directory" -o -z "$borg_host" -o -z "$borg_user" -o -z "$borg_compression" ]
    do
      formBegin "$borg_title - destination"
-        formItem "dest_directory" "$borg_directory"
-        formItem "dest_host" "$borg_host"
-        formItem "dest_user" "$borg_user"
+        formItem "directory" "$borg_directory"
+        formItem "host" "$borg_host"
+        formItem "user" "$borg_user"
+        formItem "compression" "$borg_compression"
         formDisplay
      [ $? = 0 ] || return
      tmp_array=($REPLY)
      borg_directory=${tmp_array[0]}
      borg_host=${tmp_array[1]}
      borg_user=${tmp_array[2]}
+     borg_compression=${tmp_array[3]}
   done
   set +o noglob
 
@@ -240,7 +242,7 @@ do_borg_prune() {
 
    set -o noglob
    REPLY=
-   formBegin "$borg_title - pruning (how many dumps to keep)"
+   formBegin "$borg_title - pruning (how many backups to keep)"
       formItem "daily" "$borg_keepdaily"
       formItem "weekly" "$borg_keepweekly"
       formItem "monthly" "$borg_keepmonthly"
@@ -290,6 +292,7 @@ keepmonthly = $borg_keepmonthly
 directory = $borg_directory
 host = $borg_host
 user = $borg_user
+compression = $borg_compression
 EOF
 
    chmod 600 $next_filename
@@ -340,6 +343,7 @@ borg_wizard() {
    borg_directory=/backup/`hostname`
    borg_user=root
    borg_host=localhost
+   borg_compression=lz4
    borg_keepdaily=7
    borg_keepweekly=4
    borg_keepmonthly=-1
