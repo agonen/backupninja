@@ -4,7 +4,6 @@
 #
 # TODO: compression support
 # TODO: archive naming support
-# TODO: pruning support
 # TODO: encryption support
 #
 
@@ -236,13 +235,34 @@ do_borg_con() {
    setDefault finish
 }
 
+do_borg_prune() {
+   declare -a tmp_array
+
+   set -o noglob
+   REPLY=
+   formBegin "$borg_title - pruning (how many dumps to keep)"
+      formItem "daily" "$borg_keepdaily"
+      formItem "weekly" "$borg_keepweekly"
+      formItem "monthly" "$borg_keepmonthly"
+      formDisplay
+
+   [ $? = 0 ] || return
+   tmp_array=($REPLY)
+   borg_keepdaily=${tmp_array[0]}
+   borg_keepweekly=${tmp_array[1]}
+   borg_keepmonthly=${tmp_array[2]}
+
+   set +o noglob
+
+  _prune_done="(DONE)"
+}
 
 do_borg_finish() {
    get_next_filename $configdirectory/90.borg
    cat > $next_filename <<EOF
-# for more options see
-# - example.borg
-# - $borg_docs
+## for more options see
+## - example.borg
+## - $borg_docs
 
 [source]
 EOF
@@ -261,6 +281,11 @@ EOF
    set +o noglob
    cat >> $next_filename <<EOF
 
+## for more info see : borg prune -h
+keepdaily = $borg_keepdaily
+keepweekly = $borg_keepweekly
+keepmonthly = $borg_keepmonthly
+
 [dest]
 directory = $borg_directory
 host = $borg_host
@@ -277,10 +302,12 @@ borg_main_menu() {
       srcitem="choose files to include & exclude $_src_done"
       destitem="configure backup destination $_dest_done"
       conitem="test connection and destination dir $_con_done"
+      pruneitem="configure pruning (optional) $_prune_done"
       menuBox "$borg_title" "choose a step:" \
          src "$srcitem" \
          dest "$destitem" \
          conn "$conitem" \
+         prune "$pruneitem" \
          finish "finish and create config file"
       [ $? = 0 ] || return
       result="$REPLY"
@@ -288,9 +315,10 @@ borg_main_menu() {
          "src") do_borg_src;;
          "dest") do_borg_dest;;
          "conn") do_borg_con;;
+         "prune") do_borg_prune;;
          "finish")
             if [[ "$_con_done$_dest_done$_src_done" != "(DONE)(DONE)(DONE)" ]]; then
-               msgBox "$borg_title" "You cannot create the configuration file until the other steps are completed."
+               msgBox "$borg_title" "You cannot create the configuration file until mandatory steps are completed."
             else
                do_borg_finish
                return
@@ -304,12 +332,17 @@ borg_wizard() {
    # Global variables
    borg_title="borg action wizard"
    borg_docs="http://borgbackup.readthedocs.io/en/stable"
+
    _src_done=
    _dest_done=
    _con_done=
+
    borg_directory=/backup/`hostname`
    borg_user=root
    borg_host=localhost
+   borg_keepdaily=7
+   borg_keepweekly=4
+   borg_keepmonthly=-1
 
    # Global variables whose '*' shall not be expanded
    set -o noglob
